@@ -2,7 +2,7 @@ module Route.Index exposing (ActionData, Data, Model, Msg, route)
 
 import BackendTask exposing (BackendTask)
 import BackendTask.Custom
-import Element exposing (Element)
+import Element exposing (Element, fill, height, px, width)
 import FatalError exposing (FatalError)
 import Head
 import Head.Seo as Seo
@@ -101,6 +101,6 @@ view app shared =
         [ Element.paragraph [] [ Element.text "Posts" ]
         , app.data.posts
             |> List.map postView
-            |> Element.column []
+            |> Element.column [ width fill, height (px 100) ]
         ]
     }

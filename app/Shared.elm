@@ -4,8 +4,10 @@ import BackendTask exposing (BackendTask)
 import Effect exposing (Effect)
 import Element exposing (Element, column, fill, height, px, width)
 import Element.Events exposing (onClick)
+import Element.Font
 import Element.Input
 import FatalError exposing (FatalError)
+import Header
 import Html exposing (Html)
 import Pages.Flags
 import Pages.PageUrl exposing (PageUrl)
@@ -95,37 +97,20 @@ view :
     -> { body : List (Html msg), title : String }
 view sharedData page model toMsg pageView =
     { body =
-        Element.column [ width fill, height fill ]
-            [ Element.row [ width fill, height (px 60) ]
-                [ Element.Input.button []
-                    { onPress = Just MenuClicked
-                    , label =
-                        Element.text
-                            (if model.showMenu then
-                                "Close Menu"
-
-                             else
-                                "Open Menu"
-                            )
-                    }
-                , if model.showMenu then
-                    Element.column
-                        [ Element.below
-                            (column []
-                                [ Element.row [] [ Element.paragraph [] [ Element.text "Link 1" ] ]
-                                , Element.row [] [ Element.paragraph [] [ Element.text "Link 2" ] ]
-                                ]
-                            )
-                        ]
-                        []
-
-                  else
-                    Element.none
+        (Header.view
+            { showMobileMenu = model.showMenu
+            , toggleMobileMenu = MenuClicked
+            , height = 80
+            }
+            page
+            |> Element.map toMsg
+        )
+            :: pageView.body
+            |> Element.column
+                [ width fill
+                , Element.Font.family [ Element.Font.typeface "system" ]
                 ]
-                |> Element.map toMsg
-            , Element.row [ width fill ] pageView.body
-            ]
-            |> Element.layout [ width fill, height fill ]
+            |> Element.layout [ width fill ]
             |> List.singleton
     , title = pageView.title
     }
