@@ -130,12 +130,12 @@ view ({ showMobileMenu, toggleMobileMenu } as config) page =
                                 { url = "/"
                                 , label = Element.text "WHO WE ARE"
                                 }
+                            , headerLink []
+                                (page.route == Just Calendar)
+                                { url = "/calendar"
+                                , label = Element.text "CALENDAR"
+                                }
 
-                            -- , headerLink []
-                            --     (page.route == Just Calendar)
-                            --     { url = "/calendar"
-                            --     , label = Element.text "CALENDAR"
-                            --     }
                             -- , headerLink []
                             --     (page.route == Just Handbook)
                             --     { url = "/handbook"
