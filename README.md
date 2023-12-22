@@ -5,7 +5,7 @@
 ## Setup Instructions
 
 You can clone this repo with
-`git clone https://github.com/rentersunionnashville/website.git`.
+`git clone https://github.com/renters-union-nashville/website.git`.
 
 `npm install` from the cloned repo. Before running the dev server or build, make
 sure to install Lamdera (see below).
