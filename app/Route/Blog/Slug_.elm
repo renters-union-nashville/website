@@ -1,14 +1,26 @@
 module Route.Blog.Slug_ exposing (ActionData, Data, Model, Msg, route)
 
 import BackendTask exposing (BackendTask)
+import BackendTask.Custom
+import Effect
 import Element
+import ErrorPage exposing (ErrorPage)
 import FatalError exposing (FatalError)
 import Head
 import Head.Seo as Seo
+import Json.Decode as Decode
+import Json.Encode as Encode
+import Markdown.Block exposing (Block)
+import Markdown.Parser
+import Markdown.Renderer
 import Pages.Url
 import PagesMsg exposing (PagesMsg)
-import RouteBuilder exposing (App, StatelessRoute)
+import Post
+import RouteBuilder exposing (App, StatefulRoute)
+import Server.Request exposing (Request)
+import Server.Response exposing (Response)
 import Shared
+import UrlPath
 import View exposing (View)
 
 
@@ -16,33 +28,57 @@ type alias Model =
     {}
 
 
-type alias Msg =
-    ()
+type Msg
+    = NoOp
 
 
 type alias RouteParams =
     { slug : String }
 
 
-route : StatelessRoute RouteParams Data ActionData
+route : StatefulRoute RouteParams Data ActionData Model Msg
 route =
-    RouteBuilder.preRender
-        { head = head
-        , pages = pages
-        , data = data
+    RouteBuilder.buildWithLocalState
+        { view = view
+        , init = init
+        , update = update
+        , subscriptions = subscriptions
         }
-        |> RouteBuilder.buildNoState { view = view }
+        (RouteBuilder.serverRender { data = data, action = action, head = head })
 
 
-pages : BackendTask FatalError (List RouteParams)
-pages =
-    BackendTask.succeed
-        [ { slug = "hello" }
-        ]
+init :
+    RouteBuilder.App Data ActionData RouteParams
+    -> Shared.Model
+    -> ( Model, Effect.Effect Msg )
+init app shared =
+    ( {}, Effect.none )
+
+
+update :
+    RouteBuilder.App Data ActionData RouteParams
+    -> Shared.Model
+    -> Msg
+    -> Model
+    -> ( Model, Effect.Effect msg )
+update app shared msg model =
+    case msg of
+        NoOp ->
+            ( model, Effect.none )
+
+
+subscriptions :
+    RouteParams
+    -> UrlPath.UrlPath
+    -> Shared.Model
+    -> Model
+    -> Sub Msg
+subscriptions routeParams path shared model =
+    Sub.none
 
 
 type alias Data =
-    { something : String
+    { body : List Block
     }
 
 
@@ -50,10 +86,40 @@ type alias ActionData =
     {}
 
 
-data : RouteParams -> BackendTask FatalError Data
-data routeParams =
-    BackendTask.map Data
-        (BackendTask.succeed "Hi")
+data :
+    RouteParams
+    -> Request
+    -> BackendTask.BackendTask FatalError.FatalError (Response Data ErrorPage)
+data routeParams request =
+    BackendTask.Custom.run "getPost"
+        (Encode.string routeParams.slug)
+        (Decode.nullable Post.decoder)
+        |> BackendTask.allowFatal
+        |> BackendTask.andThen
+            (\maybePost ->
+                case maybePost of
+                    Just post ->
+                        let
+                            parsed : Result String (List Block)
+                            parsed =
+                                post.body
+                                    |> Markdown.Parser.parse
+                                    |> Result.mapError (\_ -> "Invalid markdown.")
+                        in
+                        parsed
+                            |> Result.mapError FatalError.fromString
+                            |> Result.map
+                                (\parsedMarkdown ->
+                                    Server.Response.render
+                                        { body = parsedMarkdown
+                                        }
+                                )
+                            |> BackendTask.fromResult
+
+                    Nothing ->
+                        Server.Response.errorPage ErrorPage.NotFound
+                            |> BackendTask.succeed
+            )
 
 
 head :
@@ -77,10 +143,27 @@ head app =
 
 
 view :
-    App Data ActionData RouteParams
+    RouteBuilder.App Data ActionData RouteParams
     -> Shared.Model
-    -> View (PagesMsg Msg)
-view app sharedModel =
-    { title = "Placeholder - Blog.Slug_"
-    , body = [ Element.column [] [ Element.text "You're on the page Blog.Slug_" ] ]
+    -> Model
+    -> View.View (PagesMsg Msg)
+view app shared model =
+    { title = "Posts.Slug_"
+    , body =
+        [ Element.text "Here is your generated page!!!"
+        , Element.column []
+            (app.data.body
+                |> Markdown.Renderer.render Markdown.Renderer.defaultHtmlRenderer
+                |> Result.withDefault []
+                |> List.map Element.html
+            )
+        ]
     }
+
+
+action :
+    RouteParams
+    -> Request
+    -> BackendTask.BackendTask FatalError.FatalError (Server.Response.Response ActionData ErrorPage.ErrorPage)
+action routeParams request =
+    BackendTask.succeed (Server.Response.render {})
