@@ -61,9 +61,9 @@ view page =
         --     { url = "/handbook"
         --     , label = Element.text "HANDBOOK"
         --     }
-        -- , headerLink []
-        --     (page.route == Just Blog)
-        --     { url = "/blog"
-        --     , label = Element.text "BLOG"
-        --     }
+        , headerLink []
+            (page.route == Just Blog)
+            { url = "/blog"
+            , label = Element.text "BLOG"
+            }
         ]

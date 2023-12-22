@@ -3,7 +3,7 @@ module Route.Blog.Slug_ exposing (ActionData, Data, Model, Msg, route)
 import BackendTask exposing (BackendTask)
 import BackendTask.Custom
 import Effect
-import Element
+import Element exposing (column, text)
 import ErrorPage exposing (ErrorPage)
 import FatalError exposing (FatalError)
 import Head
@@ -150,8 +150,8 @@ view :
 view app shared model =
     { title = "Posts.Slug_"
     , body =
-        [ Element.text "Here is your generated page!!!"
-        , Element.column []
+        [ text "Here is your generated page!!!"
+        , column []
             (app.data.body
                 |> Markdown.Renderer.render Markdown.Renderer.defaultHtmlRenderer
                 |> Result.withDefault []

@@ -1,13 +1,12 @@
-module Route.Index exposing (ActionData, Data, Model, Msg, route)
+module Route.Blog exposing (ActionData, Data, Model, Msg, route)
 
 import BackendTask exposing (BackendTask)
 import BackendTask.Custom
-import Element exposing (Element, fill, height, paragraph, px, text, width)
+import Element exposing (Element, fill, height, px, width)
 import FatalError exposing (FatalError)
 import Head
 import Head.Seo as Seo
-import Html exposing (Html)
-import Html.Attributes
+import Html
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Pages.Url
@@ -33,7 +32,8 @@ type alias RouteParams =
 
 
 type alias Data =
-    {}
+    { posts : List Post
+    }
 
 
 type alias ActionData =
@@ -52,6 +52,12 @@ route =
 data : BackendTask FatalError Data
 data =
     BackendTask.succeed Data
+        |> BackendTask.andMap
+            (BackendTask.Custom.run "posts"
+                Encode.null
+                (Decode.list Post.decoder)
+                |> BackendTask.allowFatal
+            )
 
 
 head :
@@ -74,20 +80,27 @@ head app =
         |> Seo.website
 
 
+postView : Post -> Element msg
+postView post =
+    Element.row []
+        [ Route.Blog__Slug_ { slug = post.slug }
+            |> Route.link []
+                [ Html.text post.title
+                ]
+            |> Element.html
+        ]
+
+
 view :
     App Data ActionData RouteParams
     -> Shared.Model
     -> View (PagesMsg Msg)
 view app shared =
-    { title = "Renters Union Nashville"
+    { title = "Renters Union Nashville | Blog"
     , body =
-        [ paragraph [] [ text "Welcome" ]
-        , Element.html <|
-            Html.div [ Html.Attributes.class "video-container" ]
-                [ Html.iframe
-                    [ Html.Attributes.src "https://www.youtube.com/embed/aHZGWikKPeY?controls=0&autoplay=1&mute=1&playsinline=1&loop=1"
-                    ]
-                    []
-                ]
+        [ Element.paragraph [] [ Element.text "Posts" ]
+        , app.data.posts
+            |> List.map postView
+            |> Element.column [ width fill, height (px 100) ]
         ]
     }
