@@ -2,14 +2,16 @@ module Shared exposing (Data, Model, Msg(..), SharedMsg(..), template)
 
 import BackendTask exposing (BackendTask)
 import Effect exposing (Effect)
+import Element exposing (Element, column, fill, height, px, width)
+import Element.Events exposing (onClick)
+import Element.Input
 import FatalError exposing (FatalError)
 import Html exposing (Html)
-import Html.Events
 import Pages.Flags
 import Pages.PageUrl exposing (PageUrl)
-import UrlPath exposing (UrlPath)
 import Route exposing (Route)
 import SharedTemplate exposing (SharedTemplate)
+import UrlPath exposing (UrlPath)
 import View exposing (View)
 
 
@@ -93,28 +95,37 @@ view :
     -> { body : List (Html msg), title : String }
 view sharedData page model toMsg pageView =
     { body =
-        [ Html.nav []
-            [ Html.button
-                [ Html.Events.onClick MenuClicked ]
-                [ Html.text
-                    (if model.showMenu then
-                        "Close Menu"
+        Element.column [ width fill, height fill ]
+            [ Element.row [ width fill, height (px 60) ]
+                [ Element.Input.button []
+                    { onPress = Just MenuClicked
+                    , label =
+                        Element.text
+                            (if model.showMenu then
+                                "Close Menu"
 
-                     else
-                        "Open Menu"
-                    )
+                             else
+                                "Open Menu"
+                            )
+                    }
+                , if model.showMenu then
+                    Element.column
+                        [ Element.below
+                            (column []
+                                [ Element.row [] [ Element.paragraph [] [ Element.text "Link 1" ] ]
+                                , Element.row [] [ Element.paragraph [] [ Element.text "Link 2" ] ]
+                                ]
+                            )
+                        ]
+                        []
+
+                  else
+                    Element.none
                 ]
-            , if model.showMenu then
-                Html.ul []
-                    [ Html.li [] [ Html.text "Menu item 1" ]
-                    , Html.li [] [ Html.text "Menu item 2" ]
-                    ]
-
-              else
-                Html.text ""
+                |> Element.map toMsg
+            , Element.row [ width fill ] pageView.body
             ]
-            |> Html.map toMsg
-        , Html.main_ [] pageView.body
-        ]
+            |> Element.layout [ width fill, height fill ]
+            |> List.singleton
     , title = pageView.title
     }

@@ -1,16 +1,21 @@
 module Route.Index exposing (ActionData, Data, Model, Msg, route)
 
 import BackendTask exposing (BackendTask)
+import BackendTask.Custom
+import Element exposing (Element)
 import FatalError exposing (FatalError)
 import Head
 import Head.Seo as Seo
 import Html
+import Json.Decode as Decode
+import Json.Encode as Encode
 import Pages.Url
 import PagesMsg exposing (PagesMsg)
-import UrlPath
+import Post exposing (Post)
 import Route
 import RouteBuilder exposing (App, StatelessRoute)
 import Shared
+import UrlPath
 import View exposing (View)
 
 
@@ -27,7 +32,7 @@ type alias RouteParams =
 
 
 type alias Data =
-    { message : String
+    { posts : List Post
     }
 
 
@@ -48,7 +53,11 @@ data : BackendTask FatalError Data
 data =
     BackendTask.succeed Data
         |> BackendTask.andMap
-            (BackendTask.succeed "Hello!")
+            (BackendTask.Custom.run "posts"
+                Encode.null
+                (Decode.list Post.decoder)
+                |> BackendTask.allowFatal
+            )
 
 
 head :
@@ -71,18 +80,27 @@ head app =
         |> Seo.website
 
 
+postView : Post -> Element msg
+postView post =
+    Element.row []
+        [ Route.Blog__Slug_ { slug = post.slug }
+            |> Route.link []
+                [ Html.text post.title
+                ]
+            |> Element.html
+        ]
+
+
 view :
     App Data ActionData RouteParams
     -> Shared.Model
     -> View (PagesMsg Msg)
 view app shared =
-    { title = "elm-pages is running"
+    { title = "Renters Union Nashville"
     , body =
-        [ Html.h1 [] [ Html.text "elm-pages is up and running!" ]
-        , Html.p []
-            [ Html.text <| "The message is: " ++ app.data.message
-            ]
-        , Route.Blog__Slug_ { slug = "hello" }
-            |> Route.link [] [ Html.text "My blog post" ]
+        [ Element.paragraph [] [ Element.text "Posts" ]
+        , app.data.posts
+            |> List.map postView
+            |> Element.column []
         ]
     }

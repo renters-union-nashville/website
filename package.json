@@ -12,6 +12,8 @@
     "elm-pages": "^3.0.2",
     "elm-review": "^2.10.2",
     "elm-tooling": "^1.14.0",
+    "prisma": "^5.7.1",
+    "@prisma/client": "^5.7.1",
     "vite": "^4.3.5"
   },
   "dependencies": {

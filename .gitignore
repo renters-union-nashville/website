@@ -6,7 +6,9 @@ gen/
 .elm-pages
 functions/server-render
 functions/render
-
+.env
+.direnv
+playground.js
 
 # Local Netlify folder
 .netlify
