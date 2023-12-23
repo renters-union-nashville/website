@@ -34,6 +34,7 @@
             elmPackages.lamdera
             elmPackages.elm-review
             elmPackages.elm-format
+            netlify-cli
           ];
         };
       });

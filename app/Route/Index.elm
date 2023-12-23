@@ -67,9 +67,9 @@ head app =
             , dimensions = Nothing
             , mimeType = Nothing
             }
-        , description = "Welcome to elm-pages!"
+        , description = "Organize for renter power!"
         , locale = Nothing
-        , title = "elm-pages is running"
+        , title = "Renters Union Nashville"
         }
         |> Seo.website
 
